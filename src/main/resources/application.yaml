@@ -1,0 +1,26 @@
+# datasource
+spring :
+  datasource :
+    driver-class-name : org.h2.Driver
+    url : jdbc:h2:./h2db/sampledb
+    username : username
+    password : password
+
+# connection pool use tomcat
+  tomcat :
+    maxActive : 10
+    maxIdle : 10
+    minIdle : 10
+    initialSize : 10
+    defaultAutoCommit : false
+
+  batch :
+    initialize-schema : always
+    job :
+      enabled: false
+
+# h2 for debug tool
+# spring.h2.console.enabled=true
+# spring.h2.console.path=/h2-console
+# spring.h2.console.settings.web-allow-others=true
+
