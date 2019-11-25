@@ -1,13 +1,12 @@
 package com.example.demoBoot.batch.job;
 
-import com.example.demoBoot.batch.component.Demo;
 import com.example.demoBoot.batch.component.DemoComponent;
 import com.example.demoBoot.batch.component.DemoComponentWriter;
-import com.example.demoBoot.batch.entity.DemoReader;
+import com.example.demoBoot.batch.component.HogeReader;
+import com.example.demoBoot.batch.component.HogeWriter;
+import com.example.demoBoot.batch.entity.DemoEntity;
 import com.example.demoBoot.batch.listener.JobListener;
-import com.example.demoBoot.batch.tasklet.DemoTasklet;
-import com.example.demoBoot.batch.tasklet.DemoTasklet2;
-import lombok.RequiredArgsConstructor;
+import lombok.Builder;
 import org.apache.ibatis.session.SqlSessionFactory;
 import org.mybatis.spring.SqlSessionFactoryBean;
 import org.mybatis.spring.batch.MyBatisCursorItemReader;
@@ -19,37 +18,37 @@ import org.springframework.batch.core.configuration.annotation.EnableBatchProces
 import org.springframework.batch.core.configuration.annotation.JobBuilderFactory;
 import org.springframework.batch.core.configuration.annotation.StepBuilderFactory;
 import org.springframework.batch.core.launch.support.RunIdIncrementer;
+import org.springframework.batch.item.ItemReader;
 import org.springframework.batch.item.ItemWriter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import javax.sql.DataSource;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 @Configuration
 @EnableBatchProcessing
-//@RequierdArgsConstructor
-@RequiredArgsConstructor
+//@RequiredArgsConstructor
 public class DemoChunkJob {
 
 
     @Autowired
-    private JobBuilderFactory jobBuilderFactory;
+    private  JobBuilderFactory jobBuilderFactory;
 
     @Autowired
-    private StepBuilderFactory stepBuilderFactory;
+    private  StepBuilderFactory stepBuilderFactory;
 
     @Autowired
-    private DataSource dataSource;
+    private  DataSource dataSource;
+
+    @Autowired
+    private  DemoComponent component;
 
     @Autowired
     private DemoComponentWriter writer;
 
-    @Autowired
-    DemoComponent component;
+
 
 //    @Autowired
 //    private SqlSessionFactory sqlSessionFactory;
@@ -63,12 +62,12 @@ public class DemoChunkJob {
     }
 
     @Bean
-    public MyBatisCursorItemReader<DemoReader> reader() throws Exception {
+    public MyBatisCursorItemReader<DemoEntity> reader() throws Exception {
 
 //        Map<String, Object> parameter = new HashMap<>();
 //        parameter.put("status","A");
 
-        return new MyBatisCursorItemReaderBuilder<DemoReader>()
+        return new MyBatisCursorItemReaderBuilder<DemoEntity>()
             .sqlSessionFactory(sqlSessionFactory())
 //            .parameterValues(parameter)
             .queryId("co.jp.mapper.select")
@@ -77,17 +76,28 @@ public class DemoChunkJob {
     }
 
     @Bean
-    private ItemWriter writer() {
-       return new DemoComponentWriter<String>(component::execute);
+    public ItemReader reader2() {
+        return new HogeReader();
+    }
+
+//    @Bean
+//    public ItemWriter writer() {
+//        return new DemoComponentWriter<String>(component::execute);
+//        return writer.write();
+//    }
+
+    @Bean
+    public void writer2(List<?> items) throws Exception {
+         new HogeWriter().write((List<? extends DemoEntity>) items);
     }
 
 
     @Bean
-    public Step step1() throws Exception {
-        return stepBuilderFactory.get("step1")
+    public Step step3() throws Exception {
+        return stepBuilderFactory.get("step3")
             .chunk(1)
-            .reader(reader())
-            .writer(writer())
+            .reader(this::reader2)
+            .writer(this::writer2)
             .build();
 
     }
@@ -95,16 +105,16 @@ public class DemoChunkJob {
 
 
     @Bean
-    public Job job1(Step step1) throws Exception {
-        return jobBuilderFactory.get("job1")
+    public Job job3(Step step3) throws Exception {
+        return jobBuilderFactory.get("job3")
             .incrementer(new RunIdIncrementer())
-            .listener(listener())
-            .start(step1)
+            .listener(listener2())
+            .start(step3)
             .build();
     }
 
     @Bean
-    public JobExecutionListener listener() {
+    public JobExecutionListener listener2() {
         return new JobListener();
     }
 
